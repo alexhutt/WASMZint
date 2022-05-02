@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>WASM Zint Demo</title>
+    <script src="./wasmzint.js"></script>
+</head>
+<script type="text/javascript">
+    wasmzint().then(function (Module) {
+        var instance = new Module.ZintWrapper(92, "Demo Aztec Code", true, false, -1, 0, 0, 0);
+        instance.render(10, 1);
+        bitmapRGBA = new Uint8ClampedArray(instance.width * instance.height * 4)
+        const bitmapRGB = instance.getBitmap()
+        const bitmapA = instance.getBitmapAlpha()
+        for (let i = 0; i < instance.width * instance.height * 4; i++) {
+            if (i % 4 !== 3) {
+                bitmapRGBA[i] = bitmapRGB[Math.floor(i - i / 4)]
+            }
+            else if (bitmapA) { // Alpha
+                bitmapRGBA[i] = bitmapA[Math.floor(i - (i / 4) * 3)]
+            }
+            else {
+                bitmapRGBA[i] = 255
+            }
+        }
+        const canvas_elem = document.getElementById('c')
+        canvas_elem.width = instance.width
+        canvas_elem.height = instance.height
+        const ctx = canvas_elem.getContext('2d');
+        const img = new ImageData(bitmapRGBA, instance.width, instance.height);
+        ctx.putImageData(img, 0, 0);
+        instance.delete();
+    });
+</script>
+
+Aztec Code Rendered with Zint:<br>
+<canvas id="c" style="image-rendering:pixelated;"></canvas>
+
+<aside>If you do not see a barcode, try launching a local server such as 
+with <code>python3 -m "http.server"</code> instead of opening the html
+file directly from the filesystem. You will also need a browser that supports
+WASM.
+</aside>
+
+</body>
+
+</html>
